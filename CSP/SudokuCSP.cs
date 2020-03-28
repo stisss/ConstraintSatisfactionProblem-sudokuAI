@@ -1,89 +1,114 @@
-﻿using System;
+﻿using csp.CSP;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace csp.Variables
 {
     class SudokuCSP : CSP<SudokuField, char>
     {
-        private int GRID_SIZE = 9;
-        private char emptyField = '.';
-        List<SudokuField[][]> solutions;
+        private readonly int GRID_SIZE = 9;
+        private readonly char EMPTY_FIELD = '.';
+
+
         public SudokuCSP()
         {
-            Variables = new SudokuField[GRID_SIZE][];
-            Constraints = new List<Constraint<SudokuField>>();
-            solutions = new List<SudokuField[][]>();
-
-            Constraint<SudokuField> rowConstraint = new Constraint<SudokuField>(x => RowCheck(x));
-            Constraint<SudokuField> columnConstraint = new Constraint<SudokuField>(x => ColumnCheck(x));
-            Constraint<SudokuField> gridConstraint = new Constraint<SudokuField>(x => GridCheck(x));
-
-            Constraints.Add(rowConstraint);
-            Constraints.Add(columnConstraint);
-            Constraints.Add(gridConstraint);
-
-            LoadVariables();
-            DisplayWorld(Variables);
-
+            Variables = LoadVariables();
+            Constraints = LoadConstraints(Variables);
+            Solutions = new List<char[]>();
         }
 
-        public bool RowCheck(SudokuField sf)
+        public List<IConstraint<SudokuField, char>>[] LoadConstraints(SudokuField[] variables)
         {
-            for (int i = 0; i < Variables[sf.Row].Length; i++)
+            var constraints = new List<IConstraint<SudokuField, char>>[variables.Length];
+
+            var relatedCellsIndices = new List<int>();
+
+            for (int i = 0; i < variables.Length; i++)
             {
-                if (Variables[sf.Row][i].Value == sf.Value && !Variables[sf.Row][i].Equals(sf))
+                // Initialising constraints
+                constraints[i] = new List<IConstraint<SudokuField, char>>();
+
+                // add initial constraint
+                if (!variables[i].Value.Equals(EMPTY_FIELD))
                 {
-                    return false;
+                    constraints[i].Add(new UnaryConstraint<SudokuField, char>(variables[i].Value));
                 }
-            }
-            return true;
-        }
-
-        public bool ColumnCheck(SudokuField sf)
-        {
-            for (int i = 0; i < Variables.Length; i++)
-            {
-                if (Variables[i][sf.Column].Value == sf.Value && !Variables[i][sf.Column].Equals(sf))
+                else
                 {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public bool GridCheck(SudokuField sf)
-        {
-            for (int i = 0; i < Variables.Length; i++)
-            {
-                for (int j = 0; j < Variables[i].Length; j++)
-                {
-                    if (Variables[i][j].Grid == sf.Grid && Variables[i][j].Value == sf.Value && !Variables[i][j].Equals(sf))
+                    // row
+                    int rowIndex = i / GRID_SIZE * 9;
+                    for (int j = 0; j < GRID_SIZE; j++, rowIndex++)
                     {
-                        return false;
+
+                        relatedCellsIndices.Add(rowIndex);
+
                     }
+
+                    // column
+                    int columnIndex = i % GRID_SIZE;
+                    for (int j = 0; j < GRID_SIZE; j++, columnIndex += GRID_SIZE)
+                    {
+                        relatedCellsIndices.Add(columnIndex);
+                    }
+
+                    // small grid
+                    int verticalGrid = i / 27; // każdy rząd smallgridów ma 27 pól, numer smallgrida w pionie
+                    int horizontalGrid = i % 9 / 3;  // numer smallgrida w poziomie
+                    int smallGridIndex = verticalGrid * 27 + horizontalGrid * 3;
+                    for (int j = 0; j < 3; j++, smallGridIndex += GRID_SIZE)
+                    {
+                        for (int k = smallGridIndex; k < smallGridIndex + 3; k++)
+                        {
+                            relatedCellsIndices.Add(k);
+                        }
+                    }
+
+                    // delete duplicates
+                    relatedCellsIndices = relatedCellsIndices.Distinct().ToList();
+
+                    // delete cell's own index
+                    relatedCellsIndices.Remove(i);
+
+                    // add binary constraints
+                    for (int j = 0; j < relatedCellsIndices.Count; j++)
+                    {
+                        int index = j;
+                        constraints[i].Add(new BinaryConstraint<SudokuField, char>(relatedCellsIndices[index], variables));
+                    }
+                    //for (int j = 0; j < relatedCellsIndices.Count; j++)
+                    //{
+                    //    Console.Write(relatedCellsIndices[j] + " ");
+                    //}
+                    //Console.WriteLine();
+                    //Console.WriteLine(i);
+                    //Console.ReadKey();
+                    relatedCellsIndices.Clear();
                 }
+
             }
-            return true;
+            return constraints;
         }
 
-        public void DisplayWorld(SudokuField[][] world)
+        public void DisplayWorld(SudokuField[] world)
         {
-            for (int i = 0; i < world.Length; i++)
+            int counter = 0;
+            for (int i = 0; i < GRID_SIZE; i++)
             {
                 if (i % 3 == 0)
                 {
                     Console.WriteLine("–––––––––––––––––––––––––");
                 }
-                for (int j = 0; j < world[0].Length; j++)
+                for (int j = 0; j < GRID_SIZE; j++)
                 {
                     if (j % 3 == 0)
                     {
                         Console.Write("| ");
                     }
-                    Console.Write($"{world[i][j].Value} ");
+                    Console.Write($"{world[counter++].Value} ");
                 }
                 Console.Write("| ");
                 Console.WriteLine();
@@ -91,139 +116,114 @@ namespace csp.Variables
             Console.WriteLine("–––––––––––––––––––––––––");
         }
 
-        private void LoadVariables()
+        private SudokuField[] LoadVariables()
         {
             char[] data = Loader.GetData();
+            SudokuField[] fields = new SudokuField[data.Length];
 
             int counter = 0;
             for (int i = 0; i < GRID_SIZE; i++)
             {
-                Variables[i] = new SudokuField[GRID_SIZE];
                 for (int j = 0; j < GRID_SIZE; j++)
                 {
-                    Variables[i][j] = new SudokuField(i, j, data[counter]);
-                    if (!data[counter].Equals(emptyField))
-                    {
-                        Variables[i][j].Domain.Values = new List<char>() { data[counter] };
-                    }
+                    fields[counter] = new SudokuField(i, j, data[counter]);
                     counter++;
                 }
             }
+
+            return fields;
         }
 
-        private void UpdateDomain(SudokuField sf)
-        {
-            var temp = new SudokuField(sf);
-            List<char> fullSudokuDomain = new List<char>();
+        //private void UpdateDomain(SudokuField sf)
+        //{
+        //    var temp = new SudokuField(sf);
+        //    List<char> fullSudokuDomain = new List<char>();
+        //    string numbers = "123456789";
+        //    for (int i = 0; i < 9; i++)
+        //    {
+        //        fullSudokuDomain.Add(numbers[i]);
+        //    }
+        //    sf.Domain.Values = fullSudokuDomain;
 
-            for (int i = 0; i < 9; i++)
-            {
-                fullSudokuDomain.Add((char)i);
-            }
-            sf.Domain.Values = fullSudokuDomain;
+        //    foreach (var c in temp.Domain.Values)
+        //    {
+        //        temp.Value = c;
+        //        if (!(RowCheck(temp) && ColumnCheck(temp) && GridCheck(temp)))
+        //        {
+        //            sf.Domain.Values.Remove(c);
+        //        }
+        //    }
+        //}
 
-            foreach (var c in temp.Domain.Values)
-            {
-                temp.Value = c;
-                if (!(RowCheck(temp) && ColumnCheck(temp) && GridCheck(temp)))
-                {
-                    sf.Domain.Values.Remove(c);
-                }
-            }
-        }
-
-        private void UpdateRelatedFields(SudokuField sf)
-        {
-            for (int i = 0; i < GRID_SIZE; i++)
-            {
-                for (int j = 0; j < GRID_SIZE; j++)
-                {
-                    if (Variables[i][j].Row == sf.Row
-                        || Variables[i][j].Column == sf.Column
-                        || Variables[i][j].Grid == sf.Grid
-                        && !Variables[i][j].Equals(sf))
-                    {
-                        UpdateDomain(Variables[i][j]);
-                    }
-                }
-            }
-        }
-
-        public void InitialiseDomains()
-        {
-
-        }
+        //private void UpdateRelatedFields(SudokuField sf)
+        //{
+        //    for (int i = 0; i < GRID_SIZE; i++)
+        //    {
+        //        for (int j = 0; j < GRID_SIZE; j++)
+        //        {
+        //            if (Variables[i][j].Row == sf.Row
+        //                || Variables[i][j].Column == sf.Column
+        //                || Variables[i][j].Grid == sf.Grid
+        //                && !Variables[i][j].Equals(sf))
+        //            {
+        //                UpdateDomain(Variables[i][j]);
+        //            }
+        //        }
+        //    }
+        //}
 
         public void Solve()
         {
-            List<SudokuField> fields = new List<SudokuField>();
-            for (int i = 0; i < Variables.Length; i++)
-            {
-                fields.AddRange(Variables[i]);
-            }
-            for (int i = 0; i < fields.Count; i++)
-            {
-                UpdateDomain(fields[i]);
-            }
-            fields.Sort();
-            for (int i = 0; i < fields.Count; i++)
-            {
-                Console.Write(fields[i].Value);
-            }
-            Console.WriteLine();
-            Backtracking(fields, 0);
-            Console.WriteLine(solutions.Count);
-
-
+            Backtracking(Variables, 0);
+            Console.WriteLine($"Found {Solutions.Count} solutions");
         }
 
-        public void SaveTheResult(List<SudokuField> solution)
+        public void SaveTheResult(SudokuField[] solution)
         {
-            SudokuField[][] newSolution = new SudokuField[GRID_SIZE][];
+            char[] newSolution = new char[solution.Length];
 
-            int counter = 0;
-            for (int i = 0; i < GRID_SIZE; i++)
+            for (int i = 0; i < solution.Length; i++)
             {
-                newSolution[i] = new SudokuField[GRID_SIZE];
-                for (int j = 0; j < GRID_SIZE; j++)
-                {
-                    newSolution[i][j] = solution[counter++];
-                }
+                newSolution[i] = solution[i].Value;
             }
 
-            solutions.Add(newSolution);
-            DisplayWorld(newSolution);
+            Solutions.Add(newSolution);
         }
 
-        public void Backtracking(List<SudokuField> fields, int index)
+        public void Backtracking(SudokuField[] fields, int index)
         {
-            if (fields.Count == index)
+            // Console.Clear();
+            // Console.WriteLine(index);
+            // DisplayWorld(fields);
+            // Console.ReadKey();                 
+            if (fields.Length == index)
             {
-                Console.WriteLine("HALO");
-                SaveTheResult(fields);
+                DisplayWorld(fields);
                 Console.ReadKey();
+                SaveTheResult(fields);
                 return;
             }
             else
             {
-                Console.WriteLine(index);
                 var temp = fields[index];
                 int next = index + 1;
 
-
                 var tempDomain = new Domain<char>(temp.Domain);
+                foreach (var c in Constraints[index])
+                {
+                    tempDomain.Values = tempDomain.Values.FindAll(c.Check);
+                }
+
                 foreach (var value in tempDomain.Values)
                 {
+
                     temp.Value = value;
-                    UpdateRelatedFields(temp);
                     Backtracking(fields, next);
 
                 }
-                if (temp.Domain.Values.Count == 0)
+                if (1 < Constraints[index].Count)
                 {
-                    temp.Value = emptyField;
-                    UpdateRelatedFields(temp);
-                    return;
+                    temp.Value = EMPTY_FIELD;
                 }
                 return;
             }

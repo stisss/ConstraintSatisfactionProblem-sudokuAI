@@ -11,7 +11,7 @@ namespace csp
 
         public int Row { get; private set; }
         public int Column { get; private set; }
-        public int Grid { get; private set; }
+        public int Grid { get; private set; } // czy to jest tu potrzebne?
        
 
         public SudokuField(int row, int column, char value)
@@ -21,10 +21,11 @@ namespace csp
             Grid = row/3*3 + column / 3;
             Value = value;
 
-            List<char> fullSudokuDomain = new List<char>();
+            List<char> fullSudokuDomain = new List<char>();  // czy powinienem wyciągnąć inicjalizację pełnej dziedziny do osobnej metody?
+            string numbers = "123456789";
             for(int i = 0; i < 9; i++)
             {
-                fullSudokuDomain.Add((char)i);
+                fullSudokuDomain.Add(numbers[i]);
             }
 
             Domain = new Domain<char>(fullSudokuDomain);

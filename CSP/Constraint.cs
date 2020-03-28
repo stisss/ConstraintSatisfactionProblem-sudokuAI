@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
 namespace csp
 {
-    class Constraint<T> where T : class
+    class Constraint<T, V> where T : Variable<V>
     {
         private Predicate<T> _constraint;
 
-        public Constraint(Predicate<T> constraint)
+        public Constraint(int otherIndex, ICollection variables)
         {
-            _constraint = constraint;
+
         }
 
         public Predicate<T> Constr { get => _constraint; set => _constraint = value; }

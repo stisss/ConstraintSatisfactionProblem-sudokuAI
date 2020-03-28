@@ -9,7 +9,6 @@ namespace csp
     abstract class Variable<T> : IComparable
     {
         public Domain<T> Domain { get; set; }
-        public ArrayList Constraints { get; set; }
         public T Value { get; set; }
 
 
@@ -20,7 +19,7 @@ namespace csp
 
             Variable<T> v = other as Variable<T>;
 
-            if (v.Domain.Values.Count > this.Domain.Values.Count)
+            if (v.Domain.Values.Count < this.Domain.Values.Count)
                 return -1;
             else
                 return 1;

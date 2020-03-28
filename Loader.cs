@@ -40,7 +40,7 @@ namespace csp
                 }
             }
 
-            return puzzle[1].ToCharArray();
+            return puzzle[43].ToCharArray();
         }
     }
 }
