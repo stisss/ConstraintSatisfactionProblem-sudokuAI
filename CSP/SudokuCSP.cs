@@ -234,6 +234,7 @@ namespace csp.Variables
             }
         }
 
+
         public void SaveSolutionsToFile()
         {
             Loader.SaveSolutions(Solutions);

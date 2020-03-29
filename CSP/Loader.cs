@@ -15,7 +15,7 @@ namespace csp
         {
             string PATH = @"../../../Data/Sudoku.csv";
             int FILE_LENGTH = 47;
-            int NUMBER_OF_PUZZLE = 40;
+            int NUMBER_OF_PUZZLE = 43;
 
             string buffer = "";
 
@@ -46,6 +46,7 @@ namespace csp
             return puzzle[NUMBER_OF_PUZZLE].ToCharArray();
         }
 
+
         public static void SaveSolutions(List<char[]> solutions)
         {
             string PATH = @"../../../Data/SudokuSolutions.txt";
@@ -72,7 +73,8 @@ namespace csp
                         {
                             buffer += VERTICAL_SEPARATOR;
                         }
-                        buffer += $"{solutions[j][counter++]} ";
+                        buffer += $"{(solutions[j])[counter]} ";
+                        counter++;
                     }
                     buffer += VERTICAL_SEPARATOR + "\n";
                 }
