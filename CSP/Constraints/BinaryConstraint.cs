@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-
-namespace csp.CSP
+﻿namespace csp.CSP
 {
-
     class BinaryConstraint<T, V> : IConstraint<T, V> where T : Variable<V> 
     {
         public int OtherIndex { get; set; }

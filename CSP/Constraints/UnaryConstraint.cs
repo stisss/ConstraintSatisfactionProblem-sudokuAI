@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace csp.CSP
+﻿namespace csp.CSP
 {
     class UnaryConstraint<T, V> : IConstraint<T, V> where T : Variable<V>
     {

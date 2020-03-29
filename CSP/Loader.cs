@@ -10,9 +10,10 @@ namespace csp
     {
         public static char[] GetData()
         {
+            string PATH = @"../../../Data/Sudoku.csv";
             int FILE_LENGTH = 47;
+            int NUMBER_OF_PUZZLE = 43;
 
-            string path = @"../../../Data/Sudoku.csv";
             string buffer = "";
 
             string[] temp;
@@ -22,10 +23,9 @@ namespace csp
             string[] solution = new string[FILE_LENGTH];
 
             int counter = 0;
-
-            if (File.Exists(path))
+            if (File.Exists(PATH))
             {
-                using (var sr = File.OpenText(path))
+                using (var sr = File.OpenText(PATH))
                 {
                     while ((buffer = sr.ReadLine()) != null)
                     {
@@ -40,7 +40,7 @@ namespace csp
                 }
             }
 
-            return puzzle[43].ToCharArray();
+            return puzzle[NUMBER_OF_PUZZLE].ToCharArray();
         }
     }
 }
