@@ -9,5 +9,5 @@ in the 'Saves' directory, get familiar with 'Loader' class and build a solution.
 Default loader takes .csv files in following order: id;difficulty;puzzle;solution.
 'Puzzle' is necessary, others can be empty.
 
-Branch 'Scientific' includes some diagnostics data such as time measurements and
+Branch 'Scientific' includes some diagnostics such as time measurements and
 depth of a search tree.
