@@ -1,6 +1,7 @@
 ﻿using csp.CSP;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace csp.Variables
@@ -11,6 +12,14 @@ namespace csp.Variables
         private readonly int GRID_SIZE = 9;
         private readonly int SMALL_GRID_SIZE = 3;
         private readonly char EMPTY_FIELD = '.';
+
+        // Diagnostics
+        Stopwatch swFirstSolution;
+        Stopwatch swAllSolutions;
+        int nodesFirstSolution;
+        int nodesAllSolutions;
+        int backtrackingFirstSolution;
+        int backtrackingAllSolutions;
 
 
         public SudokuCSP()
@@ -55,12 +64,12 @@ namespace csp.Variables
 
                     // Small grid
                     // each row of small grids consists of 3*9=27 fields
-                    int verticalGrid = i / (GRID_SIZE*SMALL_GRID_SIZE);
+                    int verticalGrid = i / (GRID_SIZE * SMALL_GRID_SIZE);
 
                     // number of small grid in its row
                     int horizontalGrid = i % GRID_SIZE / SMALL_GRID_SIZE;
 
-                    int smallGridIndex = verticalGrid * (GRID_SIZE*SMALL_GRID_SIZE) + horizontalGrid * SMALL_GRID_SIZE;
+                    int smallGridIndex = verticalGrid * (GRID_SIZE * SMALL_GRID_SIZE) + horizontalGrid * SMALL_GRID_SIZE;
                     for (int j = 0; j < SMALL_GRID_SIZE; j++, smallGridIndex += GRID_SIZE)
                     {
                         for (int k = smallGridIndex; k < smallGridIndex + SMALL_GRID_SIZE; k++)
@@ -91,25 +100,28 @@ namespace csp.Variables
 
         public void DisplayWorld(SudokuField[] world)
         {
+            string HORIZONTAL_SEPARATOR = "–––––––––––––––––––––––––";
+            string VERTICAL_SEPARATOR = "| ";
+
             int counter = 0;
             for (int i = 0; i < GRID_SIZE; i++)
             {
                 if (i % SMALL_GRID_SIZE == 0)
                 {
-                    Console.WriteLine("–––––––––––––––––––––––––");
+                    Console.WriteLine(HORIZONTAL_SEPARATOR);
                 }
                 for (int j = 0; j < GRID_SIZE; j++)
                 {
                     if (j % SMALL_GRID_SIZE == 0)
                     {
-                        Console.Write("| ");
+                        Console.Write(VERTICAL_SEPARATOR);
                     }
                     Console.Write($"{world[counter++].Value} ");
                 }
-                Console.Write("| ");
+                Console.Write(VERTICAL_SEPARATOR);
                 Console.WriteLine();
             }
-            Console.WriteLine("–––––––––––––––––––––––––");
+            Console.WriteLine(HORIZONTAL_SEPARATOR);
         }
 
 
@@ -131,11 +143,36 @@ namespace csp.Variables
             return fields;
         }
 
+        public void ShowDiagnostics()
+        {
+            string HORIZONTAL_SEPARATOR = "---------------------------------------------------------\n";
+
+            Console.WriteLine($"{"Mode",-20} {"Time [ms]",5} {"Nodes",8} {"Back",8}\n" +
+                    HORIZONTAL_SEPARATOR +
+                  $"{"First solution",-20} {swFirstSolution.ElapsedMilliseconds,9} {nodesFirstSolution,8} {backtrackingFirstSolution,8}\n" +
+                  $"{"All solutions",-20} {swAllSolutions.ElapsedMilliseconds,9} {nodesAllSolutions,8} {backtrackingAllSolutions,8}\n" +
+                   HORIZONTAL_SEPARATOR +
+                  $"Number of solutions: {Solutions.Count}");
+        }
+
 
         public void Solve()
         {
+            swAllSolutions = new Stopwatch();
+            swAllSolutions.Start();
+
+            swFirstSolution = new Stopwatch();
+            swFirstSolution.Start();
+
+            nodesFirstSolution = 0;
+            nodesAllSolutions = 0;
+
+            backtrackingFirstSolution = 0;
+            backtrackingAllSolutions = 0;
+
             Backtracking(Variables, 0);
-            Console.WriteLine($"Found {Solutions.Count} solutions");
+
+            swAllSolutions.Stop();
         }
 
 
@@ -158,7 +195,15 @@ namespace csp.Variables
             if (fields.Length == index)
             {
                 // a solution has been found
+                if (Solutions.Count == 0)
+                {
+                    swFirstSolution.Stop();
+                    nodesFirstSolution = nodesAllSolutions;
+                    backtrackingFirstSolution = backtrackingAllSolutions;
+                }
+
                 SaveTheResult(fields);
+                backtrackingAllSolutions++;
                 return;
             }
             else
@@ -174,6 +219,7 @@ namespace csp.Variables
 
                 foreach (var value in tempDomain.Values)
                 {
+                    nodesAllSolutions++;
                     temp.Value = value;
                     Backtracking(fields, next);
                 }
@@ -183,6 +229,7 @@ namespace csp.Variables
                 {
                     temp.Value = EMPTY_FIELD;
                 }
+                backtrackingAllSolutions++;
                 return;
             }
         }

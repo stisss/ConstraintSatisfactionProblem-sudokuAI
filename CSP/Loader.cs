@@ -15,7 +15,7 @@ namespace csp
         {
             string PATH = @"../../../Data/Sudoku.csv";
             int FILE_LENGTH = 47;
-            int NUMBER_OF_PUZZLE = 43;
+            int NUMBER_OF_PUZZLE = 40;
 
             string buffer = "";
 
@@ -50,6 +50,9 @@ namespace csp
         {
             string PATH = @"../../../Data/SudokuSolutions.txt";
             string buffer = "";
+            string HORIZONTAL_SEPARATOR = "–––––––––––––––––––––––––\n";
+            string VERTICAL_SEPARATOR = "| ";
+
 
             buffer += $"Number of solutions: {solutions.Count}\n";
 
@@ -61,19 +64,19 @@ namespace csp
                 {
                     if (j % SMALL_GRID_SIZE == 0)
                     {
-                        buffer += "–––––––––––––––––––––––––\n";
+                        buffer += HORIZONTAL_SEPARATOR;
                     }
                     for (int k = 0; k < GRID_SIZE; k++)
                     {
                         if (k % SMALL_GRID_SIZE == 0)
                         {
-                            buffer += "| ";
+                            buffer += VERTICAL_SEPARATOR;
                         }
                         buffer += $"{solutions[j][counter++]} ";
                     }
-                    buffer += "| \n";
+                    buffer += VERTICAL_SEPARATOR + "\n";
                 }
-                buffer += "–––––––––––––––––––––––––\n";
+                buffer += HORIZONTAL_SEPARATOR;
             }
 
             File.WriteAllText(PATH, buffer);

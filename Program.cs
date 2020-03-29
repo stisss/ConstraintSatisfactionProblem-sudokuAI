@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using csp.Variables;
 
 namespace csp
@@ -9,10 +10,13 @@ namespace csp
     {
         static void Main(string[] args)
         {
-            SudokuCSP scsp = new SudokuCSP();
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
 
+            SudokuCSP scsp = new SudokuCSP();
             scsp.DisplayWorld(scsp.Variables);
             scsp.Solve();
+            scsp.ShowDiagnostics();
             scsp.SaveSolutionsToFile();
 
         }
