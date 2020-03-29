@@ -8,6 +8,9 @@ namespace csp
 {
     class Loader
     {
+        private static readonly int GRID_SIZE = 9;
+        private static readonly int SMALL_GRID_SIZE = 3;
+
         public static char[] GetData()
         {
             string PATH = @"../../../Data/Sudoku.csv";
@@ -41,6 +44,39 @@ namespace csp
             }
 
             return puzzle[NUMBER_OF_PUZZLE].ToCharArray();
+        }
+
+        public static void SaveSolutions(List<char[]> solutions)
+        {
+            string PATH = @"../../../Data/SudokuSolutions.txt";
+            string buffer = "";
+
+            buffer += $"Number of solutions: {solutions.Count}\n";
+
+
+            for (int i = 0; i < solutions.Count; i++)
+            {
+                int counter = 0;
+                for (int j = 0; j < GRID_SIZE; j++)
+                {
+                    if (j % SMALL_GRID_SIZE == 0)
+                    {
+                        buffer += "–––––––––––––––––––––––––\n";
+                    }
+                    for (int k = 0; k < GRID_SIZE; k++)
+                    {
+                        if (k % SMALL_GRID_SIZE == 0)
+                        {
+                            buffer += "| ";
+                        }
+                        buffer += $"{solutions[j][counter++]} ";
+                    }
+                    buffer += "| \n";
+                }
+                buffer += "–––––––––––––––––––––––––\n";
+            }
+
+            File.WriteAllText(PATH, buffer);
         }
     }
 }

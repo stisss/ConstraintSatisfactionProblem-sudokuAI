@@ -186,5 +186,10 @@ namespace csp.Variables
                 return;
             }
         }
+
+        public void SaveSolutionsToFile()
+        {
+            Loader.SaveSolutions(Solutions);
+        }
     }
 }

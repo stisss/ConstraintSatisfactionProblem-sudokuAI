@@ -13,6 +13,7 @@ namespace csp
 
             scsp.DisplayWorld(scsp.Variables);
             scsp.Solve();
+            scsp.SaveSolutionsToFile();
 
         }
     }
