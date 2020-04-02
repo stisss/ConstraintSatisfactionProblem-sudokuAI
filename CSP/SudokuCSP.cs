@@ -127,8 +127,8 @@ namespace csp.Variables
 
         private SudokuField[] LoadVariables()
         {
-            char[] data = Loader.GetData();
-            SudokuField[] fields = new SudokuField[data.Length];
+            char[] data = Loader.GetData(); //tablica charów z wartościami komórek
+            SudokuField[] fields = new SudokuField[data.Length]; // tablica zmiennych
 
             int counter = 0;
             for (int i = 0; i < GRID_SIZE; i++)
@@ -170,7 +170,9 @@ namespace csp.Variables
             backtrackingFirstSolution = 0;
             backtrackingAllSolutions = 0;
 
+
             Backtracking(Variables, 0);
+
 
             swAllSolutions.Stop();
         }

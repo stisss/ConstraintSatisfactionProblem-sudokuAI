@@ -10,15 +10,11 @@ namespace csp
     {
         static void Main(string[] args)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-
             SudokuCSP scsp = new SudokuCSP();
             scsp.DisplayWorld(scsp.Variables);
             scsp.Solve();
             scsp.ShowDiagnostics();
             scsp.SaveSolutionsToFile();
-
         }
     }
 }

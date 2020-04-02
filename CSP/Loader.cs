@@ -15,7 +15,7 @@ namespace csp
         {
             string PATH = @"../../../Data/Sudoku.csv";
             int FILE_LENGTH = 47;
-            int NUMBER_OF_PUZZLE = 43;
+            int NUMBER_OF_PUZZLE = 46;  // not very cool but efficient, so far 
 
             string buffer = "";
 
@@ -73,7 +73,7 @@ namespace csp
                         {
                             buffer += VERTICAL_SEPARATOR;
                         }
-                        buffer += $"{(solutions[j])[counter]} ";
+                        buffer += $"{(solutions[i])[counter]} ";
                         counter++;
                     }
                     buffer += VERTICAL_SEPARATOR + "\n";
