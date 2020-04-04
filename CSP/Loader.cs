@@ -11,11 +11,11 @@ namespace csp
         private static readonly int GRID_SIZE = 9;
         private static readonly int SMALL_GRID_SIZE = 3;
 
-        public static char[] GetData()
+        public static char[] GetData(int puzzleNumber)
         {
             string PATH = @"../../../Data/Sudoku.csv";
             int FILE_LENGTH = 47;
-            int NUMBER_OF_PUZZLE = 46;  // not very cool but efficient, so far 
+            int NUMBER_OF_PUZZLE = puzzleNumber;
 
             string buffer = "";
 

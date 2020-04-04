@@ -1,10 +1,11 @@
-﻿using csp.CSP;
+﻿using csp.CSP.VariableHeuristics;
+using csp.Variables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace csp.Variables
+namespace csp.CSP
 {
     class SudokuCSP : CSP<SudokuField, char>
     {
@@ -13,19 +14,37 @@ namespace csp.Variables
         private readonly int SMALL_GRID_SIZE = 3;
         private readonly char EMPTY_FIELD = '.';
 
+        private IVariableHeuristics<SudokuField> VariableHeuristics;
+
         // Diagnostics
         Stopwatch swFirstSolution;
         Stopwatch swAllSolutions;
         int nodesFirstSolution;
         int nodesAllSolutions;
-        int backtrackingFirstSolution;
-        int backtrackingAllSolutions;
+        int backtracksFirstSolution;
+        int backtracksAllSolutions;
 
 
-        public SudokuCSP()
+        public SudokuCSP(int puzzleNumber)
         {
-            Variables = LoadVariables();
+            Variables = LoadVariables(puzzleNumber);
             Constraints = LoadConstraints(Variables);
+            Solutions = new List<char[]>();
+        }
+
+        public IVariableHeuristics<SudokuField> GetVariableHeuristics()
+        {
+            return VariableHeuristics;
+        }
+
+        public void SetVariableHeuristics(IVariableHeuristics<SudokuField> variableHeuristics)
+        {
+            VariableHeuristics = variableHeuristics;
+            VariableHeuristics.Variables = Variables;
+        }
+
+        public void ResetResults()
+        {
             Solutions = new List<char[]>();
         }
 
@@ -34,7 +53,7 @@ namespace csp.Variables
         {
             var constraints = new List<IConstraint<SudokuField, char>>[variables.Length];
 
-            var relatedCellsIndices = new List<int>();
+            List<int> relatedCellsIndices;
 
             for (int i = 0; i < variables.Length; i++)
             {
@@ -48,41 +67,7 @@ namespace csp.Variables
                 }
                 else
                 {
-                    // Row
-                    int rowIndex = i / GRID_SIZE * GRID_SIZE;
-                    for (int j = 0; j < GRID_SIZE; j++, rowIndex++)
-                    {
-                        relatedCellsIndices.Add(rowIndex);
-                    }
-
-                    // Column
-                    int columnIndex = i % GRID_SIZE;
-                    for (int j = 0; j < GRID_SIZE; j++, columnIndex += GRID_SIZE)
-                    {
-                        relatedCellsIndices.Add(columnIndex);
-                    }
-
-                    // Small grid
-                    // each row of small grids consists of 3*9=27 fields
-                    int verticalGrid = i / (GRID_SIZE * SMALL_GRID_SIZE);
-
-                    // number of small grid in its row
-                    int horizontalGrid = i % GRID_SIZE / SMALL_GRID_SIZE;
-
-                    int smallGridIndex = verticalGrid * (GRID_SIZE * SMALL_GRID_SIZE) + horizontalGrid * SMALL_GRID_SIZE;
-                    for (int j = 0; j < SMALL_GRID_SIZE; j++, smallGridIndex += GRID_SIZE)
-                    {
-                        for (int k = smallGridIndex; k < smallGridIndex + SMALL_GRID_SIZE; k++)
-                        {
-                            relatedCellsIndices.Add(k);
-                        }
-                    }
-
-                    // delete duplicates
-                    relatedCellsIndices = relatedCellsIndices.Distinct().ToList();
-
-                    // delete cell's own index
-                    relatedCellsIndices.Remove(i);
+                    relatedCellsIndices = GetRelatedIndices(i);
 
                     // add binary constraints
                     for (int j = 0; j < relatedCellsIndices.Count; j++)
@@ -125,10 +110,10 @@ namespace csp.Variables
         }
 
 
-        private SudokuField[] LoadVariables()
+        private SudokuField[] LoadVariables(int puzzleNumber)
         {
-            char[] data = Loader.GetData(); //tablica charów z wartościami komórek
-            SudokuField[] fields = new SudokuField[data.Length]; // tablica zmiennych
+            char[] data = Loader.GetData(puzzleNumber);
+            SudokuField[] fields = new SudokuField[data.Length];
 
             int counter = 0;
             for (int i = 0; i < GRID_SIZE; i++)
@@ -147,16 +132,53 @@ namespace csp.Variables
         {
             string HORIZONTAL_SEPARATOR = "---------------------------------------------------------\n";
 
-            Console.WriteLine($"{"Mode",-20} {"Time [ms]",5} {"Nodes",8} {"Back",8}\n" +
+            Console.WriteLine($"{"Mode",-20} {"Time [ms]",5} {"Nodes",8} {"Backtracks",8}\n" +
                     HORIZONTAL_SEPARATOR +
-                  $"{"First solution",-20} {swFirstSolution.ElapsedMilliseconds,9} {nodesFirstSolution,8} {backtrackingFirstSolution,8}\n" +
-                  $"{"All solutions",-20} {swAllSolutions.ElapsedMilliseconds,9} {nodesAllSolutions,8} {backtrackingAllSolutions,8}\n" +
+                  $"{"First solution",-20} {swFirstSolution.ElapsedMilliseconds,9} {nodesFirstSolution,8} {backtracksFirstSolution,8}\n" +
+                  $"{"All solutions",-20} {swAllSolutions.ElapsedMilliseconds,9} {nodesAllSolutions,8} {backtracksAllSolutions,8}\n" +
                    HORIZONTAL_SEPARATOR +
-                  $"Number of solutions: {Solutions.Count}");
+                  $"Number of solutions: {Solutions.Count}\n");
         }
 
 
-        public void Solve()
+        public void SolveBacktracking()
+        {
+            StartMeasurements();
+
+            List<int> indices = new List<int>();
+
+            indices.Add(0);
+
+            Backtracking(Variables, indices, 0);
+
+            swAllSolutions.Stop();
+        }
+
+
+        public void SolveForwardChecking()
+        {
+            StartMeasurements();
+
+            List<int> indices = new List<int>();
+            List<List<char>> filteredDomains = new List<List<char>>();
+
+            for (int i = 0; i < Variables.Length; i++)
+            {
+                filteredDomains.Add(new List<char>(Variables[i].Domain.Values));
+                foreach (var c in Constraints[i])
+                {
+                    filteredDomains[i] = filteredDomains[i].FindAll(c.Check);
+                }
+            }
+
+            indices.Add(0);
+            ForwardChecking(Variables, filteredDomains, indices, 0);
+
+            swAllSolutions.Stop();
+        }
+
+
+        public void StartMeasurements()
         {
             swAllSolutions = new Stopwatch();
             swAllSolutions.Start();
@@ -167,14 +189,8 @@ namespace csp.Variables
             nodesFirstSolution = 0;
             nodesAllSolutions = 0;
 
-            backtrackingFirstSolution = 0;
-            backtrackingAllSolutions = 0;
-
-
-            Backtracking(Variables, 0);
-
-
-            swAllSolutions.Stop();
+            backtracksFirstSolution = 0;
+            backtracksAllSolutions = 0;
         }
 
 
@@ -191,7 +207,164 @@ namespace csp.Variables
         }
 
 
-        public void Backtracking(SudokuField[] fields, int index)
+        public void Backtracking(SudokuField[] fields, List<int> indices, int index)
+        {
+            if (indices.Count >= fields.Length)
+            {
+                if (Solutions.Count == 0)
+                {
+                    swFirstSolution.Stop();
+                    nodesFirstSolution = nodesAllSolutions;
+                    backtracksFirstSolution = backtracksAllSolutions;
+                }
+
+                SaveTheResult(fields);
+                backtracksAllSolutions++;
+                return;
+            }
+            else
+            {
+                int next = VariableHeuristics.GetNext(indices, index);
+                var temp = fields[index];
+                var tempDomain = new Domain<char>(temp.Domain);
+                char initialValue = !temp.Value.Equals(EMPTY_FIELD) ? temp.Value : EMPTY_FIELD;
+                bool constraintsViolated;
+
+                for (int i = 0; i < temp.Domain.Values.Count; i++)
+                {
+                    constraintsViolated = false;
+                    temp.Value = BasicValueHeuristic(tempDomain);
+                    nodesAllSolutions++;
+
+                    foreach (var c in Constraints[index])
+                    {
+                        if (!c.Check(temp.Value))
+                        {
+                            constraintsViolated = true;
+                            backtracksAllSolutions++;
+                            break;
+                        }
+                    }
+                    if (!constraintsViolated)
+                    {
+                        Backtracking(fields, indices, next);
+                    }
+                }
+                indices.Remove(next);
+                temp.Value = initialValue;
+                backtracksAllSolutions++;
+                return;
+            }
+
+        }
+
+        public void ForwardChecking(SudokuField[] fields, List<List<char>> filteredDomains, List<int> indices, int index)
+        {
+            if (indices.Count >= fields.Length)
+            {
+                if (Solutions.Count == 0)
+                {
+                    swFirstSolution.Stop();
+                    nodesFirstSolution = nodesAllSolutions;
+                    backtracksFirstSolution = backtracksAllSolutions;
+                }
+
+                SaveTheResult(fields);
+                backtracksAllSolutions++;
+                return;
+            }
+            else
+            {
+                int next = VariableHeuristics.GetNext(indices, index);
+                var temp = fields[index];
+                var tempDomain = new Domain<char>(filteredDomains[index]);
+                var relatedIndices = GetRelatedIndices(index);
+                char initialValue = !temp.Value.Equals(EMPTY_FIELD) ? temp.Value : EMPTY_FIELD;
+                bool constraintsViolated;
+
+                for (int i = 0; i < filteredDomains[index].Count; i++)
+                {
+                    constraintsViolated = false;
+                    temp.Value = BasicValueHeuristic(tempDomain);
+                    nodesAllSolutions++;
+
+                    for (int j = 0; j < relatedIndices.Count; j++)
+                    {
+                        int relatedIdx = relatedIndices[j];
+                        if (filteredDomains[relatedIdx].FindAll(x => x != temp.Value).Count == 0)
+                        {
+                            constraintsViolated = true;
+                            break;
+                        }
+                    }
+                    if (!constraintsViolated)
+                    {
+                        var keepOldDomains = new List<List<char>>(filteredDomains);
+                        for (int j = 0; j < relatedIndices.Count; j++)
+                        {
+                            int relatedIdx = relatedIndices[j];
+                            filteredDomains[relatedIdx] = filteredDomains[relatedIdx].FindAll(x => x != temp.Value);
+                        }
+                        ForwardChecking(fields, filteredDomains, indices, next);
+                        for (int j = 0; j < relatedIndices.Count; j++)
+                        {
+                            int relatedIdx = relatedIndices[j];
+                            filteredDomains[relatedIdx] = keepOldDomains[relatedIdx];
+                        }
+                    }
+                }
+                indices.Remove(next);
+                temp.Value = initialValue;
+                backtracksAllSolutions++;
+                return;
+            }
+        }
+
+
+
+        public int BasicVariableHeuristic(SudokuField[] fields, List<int> checkedIndices, int index)
+        {
+            int next = index + 1;
+            checkedIndices.Add(next);
+            return next;
+        }
+
+        public int RandomVariableHeuristic(SudokuField[] fields, List<int> checkedIndices, int index)
+        {
+            var uncheckedIndices = new List<int>();
+            for (int i = 0; i < fields.Length; i++)
+            {
+                if (!checkedIndices.Contains(i))
+                {
+                    uncheckedIndices.Add(i);
+                }
+            }
+
+            Random random = new Random();
+            int randomIdx = random.Next(uncheckedIndices.Count);
+            checkedIndices.Add(uncheckedIndices[randomIdx]);
+            return uncheckedIndices[randomIdx];
+        }
+
+
+        public char BasicValueHeuristic(Domain<char> domain)
+        {
+            var temp = domain.Values.Last();
+            domain.Values.Remove(temp);
+            return temp;
+        }
+
+        public char RandomValueHeuristic(Domain<char> domain)
+        {
+            Random random = new Random();
+            int index = random.Next(domain.Values.Count);
+            var temp = domain.Values[index];
+            domain.Values.Remove(temp);
+            return temp;
+        }
+
+
+        public void QuiteANiceWayOfSearching(SudokuField[] fields, int index)
         {
 
             if (fields.Length == index)
@@ -201,11 +374,11 @@ namespace csp.Variables
                 {
                     swFirstSolution.Stop();
                     nodesFirstSolution = nodesAllSolutions;
-                    backtrackingFirstSolution = backtrackingAllSolutions;
+                    backtracksFirstSolution = backtracksAllSolutions;
                 }
 
                 SaveTheResult(fields);
-                backtrackingAllSolutions++;
+                backtracksAllSolutions++;
                 return;
             }
             else
@@ -223,7 +396,7 @@ namespace csp.Variables
                 {
                     nodesAllSolutions++;
                     temp.Value = value;
-                    Backtracking(fields, next);
+                    QuiteANiceWayOfSearching(fields, next);
                 }
 
                 // check if current field has a constant value
@@ -231,9 +404,53 @@ namespace csp.Variables
                 {
                     temp.Value = EMPTY_FIELD;
                 }
-                backtrackingAllSolutions++;
+                backtracksAllSolutions++;
                 return;
             }
+        }
+
+
+        public List<int> GetRelatedIndices(int index)
+        {
+            List<int> relatedCellsIndices = new List<int>();
+
+            // Row
+            int rowIndex = index / GRID_SIZE * GRID_SIZE;
+            for (int j = 0; j < GRID_SIZE; j++, rowIndex++)
+            {
+                relatedCellsIndices.Add(rowIndex);
+            }
+
+            // Column
+            int columnIndex = index % GRID_SIZE;
+            for (int j = 0; j < GRID_SIZE; j++, columnIndex += GRID_SIZE)
+            {
+                relatedCellsIndices.Add(columnIndex);
+            }
+
+            // Small grid
+            // each row of small grids consists of 3*9=27 fields
+            int verticalGrid = index / (GRID_SIZE * SMALL_GRID_SIZE);
+
+            // number of small grid in its row
+            int horizontalGrid = index % GRID_SIZE / SMALL_GRID_SIZE;
+
+            int smallGridIndex = verticalGrid * (GRID_SIZE * SMALL_GRID_SIZE) + horizontalGrid * SMALL_GRID_SIZE;
+            for (int j = 0; j < SMALL_GRID_SIZE; j++, smallGridIndex += GRID_SIZE)
+            {
+                for (int k = smallGridIndex; k < smallGridIndex + SMALL_GRID_SIZE; k++)
+                {
+                    relatedCellsIndices.Add(k);
+                }
+            }
+
+            // delete duplicates
+            relatedCellsIndices = relatedCellsIndices.Distinct().ToList();
+
+            // delete cell's own index
+            relatedCellsIndices.Remove(index);
+
+            return relatedCellsIndices;
         }
 
 

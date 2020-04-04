@@ -12,7 +12,7 @@ namespace csp
 
         public Domain(List<T> values)
         {
-            Values = values;
+            Values = new List<T>(values);
         }
 
 
