@@ -321,32 +321,6 @@ namespace csp.CSP
         }
 
 
-
-        public int BasicVariableHeuristic(SudokuField[] fields, List<int> checkedIndices, int index)
-        {
-            int next = index + 1;
-            checkedIndices.Add(next);
-            return next;
-        }
-
-        public int RandomVariableHeuristic(SudokuField[] fields, List<int> checkedIndices, int index)
-        {
-            var uncheckedIndices = new List<int>();
-            for (int i = 0; i < fields.Length; i++)
-            {
-                if (!checkedIndices.Contains(i))
-                {
-                    uncheckedIndices.Add(i);
-                }
-            }
-
-            Random random = new Random();
-            int randomIdx = random.Next(uncheckedIndices.Count);
-            checkedIndices.Add(uncheckedIndices[randomIdx]);
-            return uncheckedIndices[randomIdx];
-        }
-
-
         public char BasicValueHeuristic(Domain<char> domain)
         {
             var temp = domain.Values.Last();

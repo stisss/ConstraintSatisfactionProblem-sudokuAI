@@ -1,45 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace csp.CSP.VariableHeuristics
 {
     class RandomStaticVariableHeuristics<T> : IVariableHeuristics<T>
     {
-        public T[] Variables { get; set; }
+        private T[] _variables;
+        public T[] Variables { get=>_variables; set { _variables = value; InitialiseRandomOrder(); Order.Remove(DEFAULT_START_IDX);} }
         public List<int> Order { get; set; }
 
         private Random random = new Random();
 
+        int DEFAULT_START_IDX = 0;
 
-        public RandomStaticVariableHeuristics(T[] variables)
+
+        public RandomStaticVariableHeuristics()
         {
-            Variables = variables;
-            InitialiseRandomOrder();
         }
 
 
         public int GetNext(List<int> checkedIndices, int index)
         {
-            var uncheckedIndices = new List<int>();
-            for (int i = 0; i < Variables.Length; i++)
-            {
-                if (!checkedIndices.Contains(i))
-                {
-                    uncheckedIndices.Add(i);
-                }
-            }
-
-            Random random = new Random();
-            int randomIdx = random.Next(uncheckedIndices.Count);
-            checkedIndices.Add(uncheckedIndices[randomIdx]);
-            return uncheckedIndices[randomIdx];
+            var temp = Order.Last();
+            Order.Remove(temp);
+            checkedIndices.Add(temp);
+            return temp;
         }
 
         private void InitialiseRandomOrder()
         {
-            for(int i = 0; i < Variables.Length; i++)
+            Order = new List<int>();
+            for (int i = 0; i < Variables.Length; i++)
             {
-                Order[i] = i;
+                Order.Add(i);
             }
             Order = Shuffle(Order);
         }
