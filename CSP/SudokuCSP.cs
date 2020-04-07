@@ -140,6 +140,39 @@ namespace csp.CSP
                   $"Number of solutions: {Solutions.Count}\n");
         }
 
+        private List<List<char>> GetFilterDomainsForInitialValues()
+        {
+            var filteredDomains = new List<List<char>>();
+            for (int i = 0; i < Variables.Length; i++)
+            {
+                if(!(Variables[i].Value.Equals(EMPTY_FIELD)))
+                {
+                    filteredDomains.Add(new List<char>() { Variables[i].Value });
+                }
+                else
+                {
+                    filteredDomains.Add(new List<char>(Variables[i].Domain.Values));
+                }
+            }
+
+            return filteredDomains;
+        }
+
+        private List<List<char>> GetFilterDomainsForAllVariables()
+        {
+            var filteredDomains = new List<List<char>>();
+            for (int i = 0; i < Variables.Length; i++)
+            {
+                filteredDomains.Add(new List<char>(Variables[i].Domain.Values));
+                foreach (var c in Constraints[i])
+                {
+                    filteredDomains[i] = filteredDomains[i].FindAll(c.Check);
+                }
+            }
+
+            return filteredDomains;
+        }
+
 
         public void SolveBacktracking()
         {
@@ -147,9 +180,11 @@ namespace csp.CSP
 
             List<int> indices = new List<int>();
 
-            indices.Add(0);
+            int startingIndex = VariableHeuristics.GetStartingIndex();
 
-            Backtracking(Variables, indices, 0);
+            List<List<char>> filteredDomains = GetFilterDomainsForInitialValues();
+
+            Backtracking(Variables, filteredDomains, indices, startingIndex);
 
             swAllSolutions.Stop();
         }
@@ -160,19 +195,12 @@ namespace csp.CSP
             StartMeasurements();
 
             List<int> indices = new List<int>();
-            List<List<char>> filteredDomains = new List<List<char>>();
 
-            for (int i = 0; i < Variables.Length; i++)
-            {
-                filteredDomains.Add(new List<char>(Variables[i].Domain.Values));
-                foreach (var c in Constraints[i])
-                {
-                    filteredDomains[i] = filteredDomains[i].FindAll(c.Check);
-                }
-            }
+            List<List<char>> filteredDomains = GetFilterDomainsForAllVariables();
 
-            indices.Add(0);
-            ForwardChecking(Variables, filteredDomains, indices, 0);
+            int startingIndex = VariableHeuristics.GetStartingIndex();
+
+            ForwardChecking(Variables, filteredDomains, indices, startingIndex);
 
             swAllSolutions.Stop();
         }
@@ -207,9 +235,9 @@ namespace csp.CSP
         }
 
 
-        public void Backtracking(SudokuField[] fields, List<int> indices, int index)
+        public void Backtracking(SudokuField[] fields, List<List<char>> filteredDomains, List<int> indices, int index)
         {
-            if (indices.Count >= fields.Length)
+            if (indices.Count == fields.Length)
             {
                 if (Solutions.Count == 0)
                 {
@@ -220,17 +248,18 @@ namespace csp.CSP
 
                 SaveTheResult(fields);
                 backtracksAllSolutions++;
+
                 return;
             }
             else
             {
                 int next = VariableHeuristics.GetNext(indices, index);
                 var temp = fields[index];
-                var tempDomain = new Domain<char>(temp.Domain);
+                var tempDomain = new Domain<char>(filteredDomains[index]);
                 char initialValue = !temp.Value.Equals(EMPTY_FIELD) ? temp.Value : EMPTY_FIELD;
                 bool constraintsViolated;
 
-                for (int i = 0; i < temp.Domain.Values.Count; i++)
+                for (int i = 0; i < filteredDomains[index].Count; i++)
                 {
                     constraintsViolated = false;
                     temp.Value = BasicValueHeuristic(tempDomain);
@@ -247,10 +276,10 @@ namespace csp.CSP
                     }
                     if (!constraintsViolated)
                     {
-                        Backtracking(fields, indices, next);
+                        Backtracking(fields, filteredDomains, indices, next);
                     }
                 }
-                indices.Remove(next);
+                indices.Remove(index);
                 temp.Value = initialValue;
                 backtracksAllSolutions++;
                 return;
@@ -260,7 +289,8 @@ namespace csp.CSP
 
         public void ForwardChecking(SudokuField[] fields, List<List<char>> filteredDomains, List<int> indices, int index)
         {
-            if (indices.Count >= fields.Length)
+
+            if (indices.Count == fields.Length)
             {
                 if (Solutions.Count == 0)
                 {
@@ -313,7 +343,7 @@ namespace csp.CSP
                         }
                     }
                 }
-                indices.Remove(next);
+                indices.Remove(index);
                 temp.Value = initialValue;
                 backtracksAllSolutions++;
                 return;

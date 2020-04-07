@@ -14,6 +14,7 @@ namespace csp.CSP.VariableHeuristics
 
         public int GetNext(List<int> checkedIndices, int index)
         {
+            checkedIndices.Add(index);
             var uncheckedIndices = new List<int>();
             for (int i = 0; i < Variables.Length; i++)
             {
@@ -25,8 +26,13 @@ namespace csp.CSP.VariableHeuristics
 
             Random random = new Random();
             int randomIdx = random.Next(uncheckedIndices.Count);
-            checkedIndices.Add(uncheckedIndices[randomIdx]);
-            return uncheckedIndices[randomIdx];
+            return uncheckedIndices.Count == 0 ? -1 : uncheckedIndices[randomIdx];
+        }
+
+
+        public int GetStartingIndex()
+        {
+            return 0;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace csp.CSP.VariableHeuristics
     class RandomStaticVariableHeuristics<T> : IVariableHeuristics<T>
     {
         private T[] _variables;
-        public T[] Variables { get=>_variables; set { _variables = value; InitialiseRandomOrder(); Order.Remove(DEFAULT_START_IDX);} }
+        public T[] Variables { get=>_variables; set { _variables = value; InitialiseRandomOrder();} }
         public List<int> Order { get; set; }
 
         private Random random = new Random();
@@ -22,10 +22,26 @@ namespace csp.CSP.VariableHeuristics
 
         public int GetNext(List<int> checkedIndices, int index)
         {
-            var temp = Order.Last();
-            Order.Remove(temp);
-            checkedIndices.Add(temp);
-            return temp;
+            //int temp;
+            //int orderIdx = Order.IndexOf(index);
+            //if (orderIdx == Order.Count-1)
+            //{
+            //    temp = Order.Count;
+            //}
+            //else
+            //{
+            //    temp = Order[orderIdx + 1];
+            //}
+            //checkedIndices.Add(temp);
+            //return temp;
+
+            int orderIdx = Order.IndexOf(index);
+            checkedIndices.Add(index);
+            if(checkedIndices.Count == _variables.Length)
+            {
+                return -1;
+            }
+            return Order[orderIdx + 1];
         }
 
         private void InitialiseRandomOrder()
@@ -36,6 +52,12 @@ namespace csp.CSP.VariableHeuristics
                 Order.Add(i);
             }
             Order = Shuffle(Order);
+
+            //for (int i = 0; i < Variables.Length; i++)
+            //{
+            //    Console.Write(Order[i] + " ");
+            //}
+            //Console.WriteLine();
         }
 
         public List<int> Shuffle(List<int> list)
@@ -50,6 +72,11 @@ namespace csp.CSP.VariableHeuristics
                 list[n] = value;
             }
             return list;
+        }
+
+        public int GetStartingIndex()
+        {
+            return Order[DEFAULT_START_IDX];
         }
     }
 

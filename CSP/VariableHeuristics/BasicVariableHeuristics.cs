@@ -14,8 +14,13 @@ namespace csp.CSP.VariableHeuristics
         public int GetNext(List<int> checkedIndices, int index)
         {
             int next = index + 1;
-            checkedIndices.Add(next);
+            checkedIndices.Add(index);
             return next;
+        }
+
+        public int GetStartingIndex()
+        {
+            return 0;
         }
     }
 }

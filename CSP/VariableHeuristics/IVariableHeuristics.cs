@@ -9,5 +9,7 @@ namespace csp.CSP.VariableHeuristics
         T[] Variables { get; set; }
 
         int GetNext(List<int> checkedIndices, int index);
+
+        int GetStartingIndex();
     }
 }
