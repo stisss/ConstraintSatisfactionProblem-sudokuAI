@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq;
 
 namespace csp.CSP.ValueHeuristics
 {
-    class BasicValueHeuristic
+    class BasicValueHeuristics<T> : IValueHeuristics<T>
     {
+        public T GetNext(Domain<T> domain)
+        {
+                var temp = domain.Values.Last();
+                domain.Values.Remove(temp);
+                return temp;
+        }
     }
 }

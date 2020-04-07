@@ -1,5 +1,6 @@
 ﻿using System;
 using csp.CSP;
+using csp.CSP.ValueHeuristics;
 using csp.CSP.VariableHeuristics;
 
 namespace csp
@@ -16,39 +17,22 @@ namespace csp
 
                 SudokuCSP scsp = new SudokuCSP(number);
 
-                Console.WriteLine("Enter the number of variable heuristics: ");
-                Console.WriteLine("1-Basic          --> Choose variables in regular order, from left to right from top to bottom");
-                Console.WriteLine("2-StaticRandom   --> Get a random order of choosing variables and keep this order for the whole searching");
-                Console.WriteLine("3-DynamicRandom  --> Get a random variable from a set of 'unvisited' variables every time you need a new variable");
+                IVariableHeuristics<SudokuField> variableHeuristics = ChooseVariableHeuristics();
+                IValueHeuristics<char> valueHeuristics = ChooseValueHeuristics(scsp.Variables);
 
-                int variableHeuristicsNumber = Int32.Parse(Console.ReadLine());
+                scsp.SetVariableHeuristics(variableHeuristics);
+                scsp.ValueHeuristics = valueHeuristics;
 
-                if (variableHeuristicsNumber == 1)
-                {
-                    scsp.SetVariableHeuristics(new BasicVariableHeuristics<SudokuField>());
-                }
-                else if (variableHeuristicsNumber == 2)
-                {
-                    scsp.SetVariableHeuristics(new RandomStaticVariableHeuristics<SudokuField>());
-                }
-                else if (variableHeuristicsNumber == 3)
-                {
-                    scsp.SetVariableHeuristics(new RandomDynamicVariableHeuristics<SudokuField>());
-                }
-                else
-                {
-                    Console.WriteLine("Wrong choice, default basic heuristics has been chosen.");
-                    scsp.SetVariableHeuristics(new BasicVariableHeuristics<SudokuField>());
-                }
                 scsp.DisplayWorld(scsp.Variables);
-
 
                 Console.WriteLine("Enter the number of variable heuristics: ");
                 Console.WriteLine("1-Backtracking");
                 Console.WriteLine("2-ForwardChecking");
-                Console.WriteLine("3-BOTH");
+                Console.WriteLine("3-DifferentInterestingSearching");
+                Console.WriteLine("4-ALL OF THEM");
 
                 int searchingMethod = Int32.Parse(Console.ReadLine());
+
 
                 if (searchingMethod == 1)
                 {
@@ -60,12 +44,19 @@ namespace csp
                 }
                 else if (searchingMethod == 3)
                 {
+                    scsp.SolveQuiteNiceSearching();
+                }
+                else if (searchingMethod == 4)
+                {
                     scsp.SolveBacktracking();
                     scsp.ShowDiagnostics();
                     scsp.ResetResults();
 
                     scsp.SolveForwardChecking();
+                    scsp.ShowDiagnostics();
+                    scsp.ResetResults();
 
+                    scsp.SolveQuiteNiceSearching();
                 }
                 else
                 {
@@ -79,6 +70,71 @@ namespace csp
                 scsp.SaveSolutionsToFile();
             }
 
+        }
+
+        private static IVariableHeuristics<SudokuField> ChooseVariableHeuristics()
+        {
+            Console.WriteLine("Enter the number of variable heuristics: ");
+            Console.WriteLine("1-Basic           --> Choose variables in regular order, from left to right from top to bottom");
+            Console.WriteLine("2-StaticRandom    --> Get a random order of choosing variables and keep this order for the whole searching");
+            Console.WriteLine("3-DynamicRandom   --> Get a random variable from a set of 'unvisited' variables every time you need a new variable");
+
+            int variableHeuristicsNumber = Int32.Parse(Console.ReadLine());
+            IVariableHeuristics<SudokuField> variableHeuristics;
+
+            if (variableHeuristicsNumber == 1)
+            {
+                variableHeuristics = new BasicVariableHeuristics<SudokuField>();
+            }
+            else if (variableHeuristicsNumber == 2)
+            {
+                variableHeuristics = new RandomStaticVariableHeuristics<SudokuField>();
+            }
+            else if (variableHeuristicsNumber == 3)
+            {
+                variableHeuristics = new RandomDynamicVariableHeuristics<SudokuField>();
+            }
+            else
+            {
+                Console.WriteLine("Wrong choice, default basic heuristics has been chosen.");
+                variableHeuristics = new BasicVariableHeuristics<SudokuField>();
+            }
+
+            return variableHeuristics;
+        }
+
+        private static IValueHeuristics<char> ChooseValueHeuristics(SudokuField[] variables)
+        {
+            IValueHeuristics<char> valueHeuristics;
+
+            Console.WriteLine("Enter the number of variable heuristics: ");
+            Console.WriteLine("1-Basic           --> Choose values in order from last to first element in domain");
+            Console.WriteLine("2-Random          --> Get a random order of choosing values from domain");
+            Console.WriteLine("3-MostCommonValue --> Choose values in order from most to least common value of all assigned values");
+
+            int valueHeuristicsNumber = Int32.Parse(Console.ReadLine());
+
+            if (valueHeuristicsNumber == 1)
+            {
+                valueHeuristics = new BasicValueHeuristics<char>();
+            }
+            else if (valueHeuristicsNumber == 2)
+            {
+                valueHeuristics = new RandomValueHeuristics<char>();
+            }
+            else if (valueHeuristicsNumber == 3)
+            {
+                var heuristic = new MostCommonValueHeuristics<SudokuField, char>();
+                heuristic.Variables = variables;
+                valueHeuristics = heuristic;
+            }
+            else
+            {
+                Console.WriteLine("Wrong choice, default basic heuristics has been chosen.");
+                valueHeuristics = new BasicValueHeuristics<char>();
+            }
+
+            return valueHeuristics;
         }
     }
 }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace csp.CSP.ValueHeuristics
+﻿namespace csp.CSP.ValueHeuristics
 {
-    interface IValueHeuristics
+    interface IValueHeuristics<T>
     {
+        T GetNext(Domain<T> domain);
     }
 }

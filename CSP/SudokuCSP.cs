@@ -1,4 +1,5 @@
-﻿using csp.CSP.VariableHeuristics;
+﻿using csp.CSP.ValueHeuristics;
+using csp.CSP.VariableHeuristics;
 using csp.Variables;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,9 @@ namespace csp.CSP
         private readonly int SMALL_GRID_SIZE = 3;
         private readonly char EMPTY_FIELD = '.';
 
+        // Heuristics
         private IVariableHeuristics<SudokuField> VariableHeuristics;
+        public IValueHeuristics<char> ValueHeuristics { get; set; }
 
         // Diagnostics
         Stopwatch swFirstSolution;
@@ -37,11 +40,13 @@ namespace csp.CSP
             return VariableHeuristics;
         }
 
+
         public void SetVariableHeuristics(IVariableHeuristics<SudokuField> variableHeuristics)
         {
             VariableHeuristics = variableHeuristics;
             VariableHeuristics.Variables = Variables;
         }
+
 
         public void ResetResults()
         {
@@ -128,6 +133,7 @@ namespace csp.CSP
             return fields;
         }
 
+
         public void ShowDiagnostics()
         {
             string HORIZONTAL_SEPARATOR = "---------------------------------------------------------\n";
@@ -139,6 +145,7 @@ namespace csp.CSP
                    HORIZONTAL_SEPARATOR +
                   $"Number of solutions: {Solutions.Count}\n");
         }
+
 
         private List<List<char>> GetFilterDomainsForInitialValues()
         {
@@ -157,6 +164,7 @@ namespace csp.CSP
 
             return filteredDomains;
         }
+
 
         private List<List<char>> GetFilterDomainsForAllVariables()
         {
@@ -201,6 +209,22 @@ namespace csp.CSP
             int startingIndex = VariableHeuristics.GetStartingIndex();
 
             ForwardChecking(Variables, filteredDomains, indices, startingIndex);
+
+            swAllSolutions.Stop();
+        }
+
+
+        public void SolveQuiteNiceSearching()
+        {
+            StartMeasurements();
+
+            List<int> indices = new List<int>();
+
+            int startingIndex = VariableHeuristics.GetStartingIndex();
+
+            List<List<char>> filteredDomains = GetFilterDomainsForInitialValues();
+
+            QuiteANiceWayOfSearching(Variables, filteredDomains, indices, startingIndex);
 
             swAllSolutions.Stop();
         }
@@ -262,7 +286,9 @@ namespace csp.CSP
                 for (int i = 0; i < filteredDomains[index].Count; i++)
                 {
                     constraintsViolated = false;
-                    temp.Value = BasicValueHeuristic(tempDomain);
+                    DisplayWorld(fields);
+                    Console.ReadKey();
+                    temp.Value = ValueHeuristics.GetNext(tempDomain);
                     nodesAllSolutions++;
 
                     foreach (var c in Constraints[index])
@@ -315,7 +341,7 @@ namespace csp.CSP
                 for (int i = 0; i < filteredDomains[index].Count; i++)
                 {
                     constraintsViolated = false;
-                    temp.Value = BasicValueHeuristic(tempDomain);
+                    temp.Value = ValueHeuristics.GetNext(tempDomain);
                     nodesAllSolutions++;
 
                     for (int j = 0; j < relatedIndices.Count; j++)
@@ -351,29 +377,11 @@ namespace csp.CSP
         }
 
 
-        public char BasicValueHeuristic(Domain<char> domain)
-        {
-            var temp = domain.Values.Last();
-            domain.Values.Remove(temp);
-            return temp;
-        }
-
-        public char RandomValueHeuristic(Domain<char> domain)
-        {
-            Random random = new Random();
-            int index = random.Next(domain.Values.Count);
-            var temp = domain.Values[index];
-            domain.Values.Remove(temp);
-            return temp;
-        }
-
-
-        public void QuiteANiceWayOfSearching(SudokuField[] fields, int index)
+        public void QuiteANiceWayOfSearching(SudokuField[] fields, List<List<char>> filteredDomains, List<int> indices, int index)
         {
 
-            if (fields.Length == index)
+            if (indices.Count == fields.Length)
             {
-                // a solution has been found
                 if (Solutions.Count == 0)
                 {
                     swFirstSolution.Stop();
@@ -388,26 +396,24 @@ namespace csp.CSP
             else
             {
                 var temp = fields[index];
-                int next = index + 1;
+                int next = VariableHeuristics.GetNext(indices, index);
+                char initialValue = !temp.Value.Equals(EMPTY_FIELD) ? temp.Value : EMPTY_FIELD;
+                var tempDomain = new Domain<char>(filteredDomains[index]);
 
-                var tempDomain = new Domain<char>(temp.Domain);
                 foreach (var c in Constraints[index])
                 {
                     tempDomain.Values = tempDomain.Values.FindAll(c.Check);
                 }
 
-                foreach (var value in tempDomain.Values)
+                for (int i = 0; i < tempDomain.Values.Count; i++)
                 {
                     nodesAllSolutions++;
-                    temp.Value = value;
-                    QuiteANiceWayOfSearching(fields, next);
+                    temp.Value = ValueHeuristics.GetNext(tempDomain);
+                    QuiteANiceWayOfSearching(fields, filteredDomains, indices, next);
                 }
 
-                // check if current field has a constant value
-                if (1 < Constraints[index].Count)
-                {
-                    temp.Value = EMPTY_FIELD;
-                }
+                temp.Value = initialValue;
+                indices.Remove(index);
                 backtracksAllSolutions++;
                 return;
             }

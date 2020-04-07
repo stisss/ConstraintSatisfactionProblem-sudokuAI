@@ -26,7 +26,7 @@ namespace csp
         }
 
 
-        public Domain<char> GetSudokuDomain()
+        public static Domain<char> GetSudokuDomain()
         {
             List<char> fullSudokuDomain = new List<char>();
             string numbers = "123456789";
