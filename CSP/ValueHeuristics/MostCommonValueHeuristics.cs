@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace csp.CSP.ValueHeuristics
+﻿namespace csp.CSP.ValueHeuristics
 {
     class MostCommonValueHeuristics<V, T> : IValueHeuristics<T> where V : Variable<T>
     {

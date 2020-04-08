@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace csp.CSP.VariableHeuristics
 {
@@ -22,19 +21,6 @@ namespace csp.CSP.VariableHeuristics
 
         public int GetNext(List<int> checkedIndices, int index)
         {
-            //int temp;
-            //int orderIdx = Order.IndexOf(index);
-            //if (orderIdx == Order.Count-1)
-            //{
-            //    temp = Order.Count;
-            //}
-            //else
-            //{
-            //    temp = Order[orderIdx + 1];
-            //}
-            //checkedIndices.Add(temp);
-            //return temp;
-
             int orderIdx = Order.IndexOf(index);
             checkedIndices.Add(index);
             if(checkedIndices.Count == _variables.Length)
@@ -52,12 +38,6 @@ namespace csp.CSP.VariableHeuristics
                 Order.Add(i);
             }
             Order = Shuffle(Order);
-
-            //for (int i = 0; i < Variables.Length; i++)
-            //{
-            //    Console.Write(Order[i] + " ");
-            //}
-            //Console.WriteLine();
         }
 
         public List<int> Shuffle(List<int> list)

@@ -286,8 +286,6 @@ namespace csp.CSP
                 for (int i = 0; i < filteredDomains[index].Count; i++)
                 {
                     constraintsViolated = false;
-                    DisplayWorld(fields);
-                    Console.ReadKey();
                     temp.Value = ValueHeuristics.GetNext(tempDomain);
                     nodesAllSolutions++;
 

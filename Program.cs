@@ -23,13 +23,10 @@ namespace csp
                 scsp.SetVariableHeuristics(variableHeuristics);
                 scsp.ValueHeuristics = valueHeuristics;
 
-                scsp.DisplayWorld(scsp.Variables);
-
                 Console.WriteLine("Enter the number of variable heuristics: ");
                 Console.WriteLine("1-Backtracking");
                 Console.WriteLine("2-ForwardChecking");
-                Console.WriteLine("3-DifferentInterestingSearching");
-                Console.WriteLine("4-ALL OF THEM");
+                Console.WriteLine("3-BOTH");
 
                 int searchingMethod = Int32.Parse(Console.ReadLine());
 
@@ -44,19 +41,12 @@ namespace csp
                 }
                 else if (searchingMethod == 3)
                 {
-                    scsp.SolveQuiteNiceSearching();
-                }
-                else if (searchingMethod == 4)
-                {
                     scsp.SolveBacktracking();
                     scsp.ShowDiagnostics();
+                    scsp.SaveSolutionsToFile();
                     scsp.ResetResults();
 
                     scsp.SolveForwardChecking();
-                    scsp.ShowDiagnostics();
-                    scsp.ResetResults();
-
-                    scsp.SolveQuiteNiceSearching();
                 }
                 else
                 {
@@ -64,10 +54,9 @@ namespace csp
                     scsp.SolveBacktracking();
                 }
 
-
                 scsp.ShowDiagnostics();
-
                 scsp.SaveSolutionsToFile();
+                scsp.ResetResults();
             }
 
         }
@@ -78,6 +67,7 @@ namespace csp
             Console.WriteLine("1-Basic           --> Choose variables in regular order, from left to right from top to bottom");
             Console.WriteLine("2-StaticRandom    --> Get a random order of choosing variables and keep this order for the whole searching");
             Console.WriteLine("3-DynamicRandom   --> Get a random variable from a set of 'unvisited' variables every time you need a new variable");
+            Console.WriteLine("4-Snake           --> Pick variables from the right until you reach the grid's border. Then jump to another row and change direction");
 
             int variableHeuristicsNumber = Int32.Parse(Console.ReadLine());
             IVariableHeuristics<SudokuField> variableHeuristics;
@@ -93,6 +83,10 @@ namespace csp
             else if (variableHeuristicsNumber == 3)
             {
                 variableHeuristics = new RandomDynamicVariableHeuristics<SudokuField>();
+            }
+            else if (variableHeuristicsNumber == 4)
+            {
+                variableHeuristics = new SnakeVariableHeuristics<SudokuField>();
             }
             else
             {

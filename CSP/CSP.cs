@@ -7,6 +7,6 @@ namespace csp.Variables
     {
         public T[] Variables { get; set; }
         public List<IConstraint<T, V>>[] Constraints { get; set; }
-        public List<V[]> Solutions; // solutions przechowuje wartości, nie całe obiekty
+        public List<V[]> Solutions; 
     }
 }
