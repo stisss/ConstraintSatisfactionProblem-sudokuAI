@@ -10,9 +10,9 @@ namespace csp
 
         public int CompareTo(object other)
         {
-            if (other == null) 
+            if (other == null)
                 return 1;
-            else 
+            else
                 return -1;
         }
     }

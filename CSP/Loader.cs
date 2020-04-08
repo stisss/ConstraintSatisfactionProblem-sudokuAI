@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace csp
 {
@@ -11,11 +8,11 @@ namespace csp
         private static readonly int GRID_SIZE = 9;
         private static readonly int SMALL_GRID_SIZE = 3;
 
-        public static char[] GetData()
+        public static char[] GetData(int puzzleNumber)
         {
             string PATH = @"../../../Data/Sudoku.csv";
             int FILE_LENGTH = 47;
-            int NUMBER_OF_PUZZLE = 43;
+            int NUMBER_OF_PUZZLE = puzzleNumber;
 
             string buffer = "";
 
@@ -46,10 +43,14 @@ namespace csp
             return puzzle[NUMBER_OF_PUZZLE].ToCharArray();
         }
 
+
         public static void SaveSolutions(List<char[]> solutions)
         {
             string PATH = @"../../../Data/SudokuSolutions.txt";
             string buffer = "";
+            string HORIZONTAL_SEPARATOR = "–––––––––––––––––––––––––\n";
+            string VERTICAL_SEPARATOR = "| ";
+
 
             buffer += $"Number of solutions: {solutions.Count}\n";
 
@@ -61,19 +62,20 @@ namespace csp
                 {
                     if (j % SMALL_GRID_SIZE == 0)
                     {
-                        buffer += "–––––––––––––––––––––––––\n";
+                        buffer += HORIZONTAL_SEPARATOR;
                     }
                     for (int k = 0; k < GRID_SIZE; k++)
                     {
                         if (k % SMALL_GRID_SIZE == 0)
                         {
-                            buffer += "| ";
+                            buffer += VERTICAL_SEPARATOR;
                         }
-                        buffer += $"{solutions[j][counter++]} ";
+                        buffer += $"{(solutions[i])[counter]} ";
+                        counter++;
                     }
-                    buffer += "| \n";
+                    buffer += VERTICAL_SEPARATOR + "\n";
                 }
-                buffer += "–––––––––––––––––––––––––\n";
+                buffer += HORIZONTAL_SEPARATOR;
             }
 
             File.WriteAllText(PATH, buffer);

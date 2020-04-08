@@ -20,13 +20,13 @@ namespace csp
 
         public SudokuField(SudokuField sf)
         {
-            this.Row = sf.Row;
-            this.Column = sf.Column;
-            this.Domain = new Domain<char>(sf.Domain);
+            Row = sf.Row;
+            Column = sf.Column;
+            Domain = new Domain<char>(sf.Domain);
         }
 
 
-        public Domain<char> GetSudokuDomain()
+        public static Domain<char> GetSudokuDomain()
         {
             List<char> fullSudokuDomain = new List<char>();
             string numbers = "123456789";

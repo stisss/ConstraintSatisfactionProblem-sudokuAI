@@ -4,10 +4,12 @@
     {
         public V Value { get; set; }
 
+
         public UnaryConstraint(V value)
         {
             Value = value;
         }
+
 
         public bool Check(V value)
         {

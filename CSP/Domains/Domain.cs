@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace csp
 {
@@ -9,15 +6,16 @@ namespace csp
     {
         public List<T> Values { get; set; }
 
+
         public Domain(List<T> values)
         {
-            Values = values;
+            Values = new List<T>(values);
         }
+
 
         public Domain(Domain<T> domain)
         {
             Values = new List<T>(domain.Values);
         }
-
     }
 }
